@@ -27,11 +27,17 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      # Accept licenses (important)
+      # Accept licenses
       - name: Accept SDK licenses
         run: yes | sdkmanager --licenses
 
-      # Create npm project
+      # Fix Gradle cache issue (VERY IMPORTANT)
+      - name: Clear Gradle cache
+        run: |
+          rm -rf ~/.gradle/caches/
+          rm -rf ~/.gradle/wrapper/
+
+      # Init npm
       - name: Init npm
         run: npm init -y
 
@@ -39,41 +45,36 @@ jobs:
       - name: Install Capacitor
         run: npm install @capacitor/core @capacitor/cli @capacitor/android
 
-      # Prepare web app
+      # Prepare app
       - name: Prepare app
         run: |
           mkdir www
           cp index.html www/index.html
 
-      # Init capacitor (APP NAME = DSv2)
+      # Init Capacitor
       - name: Init Capacitor
         run: npx cap init "DSv2" "com.sanctuary.dsv2" --web-dir=www
 
-      # Add Android platform
+      # Add Android
       - name: Add Android
         run: npx cap add android
 
-      # Sync project
+      # Sync
       - name: Sync Capacitor
         run: npx cap sync android
 
-      # Fix Gradle memory (VERY IMPORTANT)
+      # Strong Gradle memory fix
       - name: Fix Gradle config
         run: |
-          echo "org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8" >> android/gradle.properties
+          echo "org.gradle.jvmargs=-Xmx3072m -Dfile.encoding=UTF-8" >> android/gradle.properties
+          echo "org.gradle.daemon=false" >> android/gradle.properties
 
-      # Clean build (prevents random failures)
-      - name: Clean project
-        run: |
-          cd android
-          chmod +x gradlew
-          ./gradlew clean
-
-      # Build APK with logs
+      # Build APK (final)
       - name: Build APK
         run: |
           cd android
-          ./gradlew assembleDebug --no-daemon --stacktrace
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon --stacktrace --info
 
       # Upload APK
       - name: Upload APK
