@@ -49,11 +49,7 @@ jobs:
       - name: Add Android
         run: npx cap add android
 
-      # ✅ Replace app icon (IMPORTANT)
-      - name: Replace App Icons
-        run: |
-          rm -rf android/app/src/main/res/mipmap-*
-          cp -r icons/mipmap-* android/app/src/main/res/
+     
 
       # ✅ Sync
       - name: Sync
