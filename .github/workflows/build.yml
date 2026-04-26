@@ -18,11 +18,12 @@ jobs:
         with:
           node-version: '18'
 
+      # ✅ FIXED: Java 21 (IMPORTANT)
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
-          distribution: 'temurin'
+          distribution: temurin
+          java-version: '21'
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
@@ -31,13 +32,13 @@ jobs:
       - name: Accept SDK licenses
         run: yes | sdkmanager --licenses
 
-      # Fix Gradle cache issue (IMPORTANT)
+      # Fix Gradle cache
       - name: Clear Gradle cache
         run: |
           rm -rf ~/.gradle/caches/
           rm -rf ~/.gradle/wrapper/
 
-      # Init npm properly
+      # Init npm
       - name: Init npm
         run: npm init -y
 
@@ -51,7 +52,7 @@ jobs:
           mkdir www
           cp index.html www/index.html
 
-      # Init Capacitor (IMPORTANT)
+      # Init Capacitor
       - name: Init Capacitor
         run: npx cap init "DSv2" "com.sanctuary.dsv2" --web-dir=www
 
@@ -63,7 +64,7 @@ jobs:
       - name: Sync Capacitor
         run: npx cap sync android
 
-      # Fix Gradle memory
+      # Fix Gradle config
       - name: Fix Gradle config
         run: |
           echo "org.gradle.jvmargs=-Xmx3072m -Dfile.encoding=UTF-8" >> android/gradle.properties
@@ -82,4 +83,3 @@ jobs:
         with:
           name: DSv2-APK
           path: android/app/build/outputs/apk/debug/app-debug.apk
-          retention-days: 30
