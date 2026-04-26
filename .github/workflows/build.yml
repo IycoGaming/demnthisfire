@@ -1,0 +1,78 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      # ✅ Create npm project
+      - name: Init npm
+        run: npm init -y
+
+      # ✅ Install Capacitor
+      - name: Install Capacitor
+        run: npm install @capacitor/core @capacitor/cli @capacitor/android
+
+      # ✅ Prepare web app
+      - name: Prepare app
+        run: |
+          mkdir www
+          cp index.html www/index.html
+
+      # ✅ Init capacitor
+      - name: Init Capacitor
+        run: npx cap init "Digital Sanctuary" "com.sanctuary.app" --web-dir=www
+
+      # ✅ Add Android
+      - name: Add Android
+        run: npx cap add android
+
+      # ✅ Replace app icon (IMPORTANT)
+      - name: Replace App Icons
+        run: |
+          rm -rf android/app/src/main/res/mipmap-*
+          cp -r icons/mipmap-* android/app/src/main/res/
+
+      # ✅ Sync
+      - name: Sync
+        run: npx cap sync
+
+      # ✅ Gradle memory fix
+      - name: Gradle config
+        run: echo "org.gradle.jvmargs=-Xmx2048m" >> android/gradle.properties
+
+      # ✅ Build APK
+      - name: Build APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon
+
+      # ✅ Upload APK
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug
+          path: android/app/build/outputs/apk/debug/app-debug.apk
