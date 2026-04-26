@@ -27,36 +27,55 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
+      # Accept licenses (important)
+      - name: Accept SDK licenses
+        run: yes | sdkmanager --licenses
+
+      # Create npm project
       - name: Init npm
         run: npm init -y
 
+      # Install Capacitor
       - name: Install Capacitor
         run: npm install @capacitor/core @capacitor/cli @capacitor/android
 
+      # Prepare web app
       - name: Prepare app
         run: |
           mkdir www
           cp index.html www/index.html
 
-      # 👉 Yahin change kiya hai (App Name)
+      # Init capacitor (APP NAME = DSv2)
       - name: Init Capacitor
         run: npx cap init "DSv2" "com.sanctuary.dsv2" --web-dir=www
 
+      # Add Android platform
       - name: Add Android
         run: npx cap add android
 
-      - name: Sync
-        run: npx cap sync
+      # Sync project
+      - name: Sync Capacitor
+        run: npx cap sync android
 
-      - name: Gradle config
-        run: echo "org.gradle.jvmargs=-Xmx2048m" >> android/gradle.properties
+      # Fix Gradle memory (VERY IMPORTANT)
+      - name: Fix Gradle config
+        run: |
+          echo "org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8" >> android/gradle.properties
 
-      - name: Build APK
+      # Clean build (prevents random failures)
+      - name: Clean project
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon
+          ./gradlew clean
 
+      # Build APK with logs
+      - name: Build APK
+        run: |
+          cd android
+          ./gradlew assembleDebug --no-daemon --stacktrace
+
+      # Upload APK
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
